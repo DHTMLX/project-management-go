@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"time"
 )
 
 type IDemodataProvider interface {
@@ -50,6 +51,8 @@ func (d AppDataProvider) items(ctx *DBContext) error {
 		return err
 	}
 
+	shiftItemDates(items)
+
 	indexMap := make(map[string]int)
 	for i := range items {
 		item := &items[i]
@@ -59,6 +62,31 @@ func (d AppDataProvider) items(ctx *DBContext) error {
 	}
 
 	return ctx.DB.Create(&items).Error
+}
+
+// demodata dates are fixed around Sep-Dec 2024; shift them by a whole number
+// of weeks so that the busiest demo week (Nov 11, 2024) lands on the current
+// week and weekdays stay aligned
+func shiftItemDates(items []Item) {
+	anchor := time.Date(2024, 11, 11, 0, 0, 0, 0, time.UTC)
+	days := 7 * int(time.Since(anchor).Hours()/(24*7))
+	if days <= 0 {
+		return
+	}
+
+	for i := range items {
+		item := &items[i]
+		dates := []**time.Time{
+			&item.StartDate, &item.EndDate,
+			&item.CreationDate, &item.EditedDate, &item.CompletionDate,
+		}
+		for _, d := range dates {
+			if *d != nil {
+				shifted := (*d).AddDate(0, 0, days)
+				*d = &shifted
+			}
+		}
+	}
 }
 
 func (d DemodataProvider) Restore(ctx *DBContext, providers ...IDemodataProvider) {
