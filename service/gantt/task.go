@@ -1,6 +1,7 @@
 package gantt
 
 import (
+	"math"
 	"project-manager-go/common"
 	"project-manager-go/data"
 	"time"
@@ -28,8 +29,13 @@ func (t *Task) PutItem(item data.Item) {
 	t.Index = item.Index
 
 	if item.EndDate != nil && item.StartDate != nil {
-		duration := item.EndDate.Sub(*item.StartDate) / time.Hour / 24
-		t.Duration = int(duration)
+		// round up so that events shorter than a day (e.g. created in Scheduler)
+		// don't turn into zero-duration tasks
+		duration := int(math.Ceil(item.EndDate.Sub(*item.StartDate).Hours() / 24))
+		if duration < 1 {
+			duration = 1
+		}
+		t.Duration = duration
 	} else {
 		item.StartDate = nil
 		t.StartDate = nil
