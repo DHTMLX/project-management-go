@@ -56,5 +56,6 @@ func (t Task) FillItem(item *data.Item) {
 		item.EndDate = &calculatedEndDate
 	} else {
 		item.StartDate = nil
+		item.EndDate = nil
 	}
 }
