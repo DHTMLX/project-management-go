@@ -27,6 +27,11 @@ type ReqColumn struct {
 	} `json:"column"`
 }
 
+type ReqLink struct {
+	ID   common.TID  `json:"id"`
+	Link kanban.Link `json:"link"`
+}
+
 type KanbanAPI struct {
 	BaseAPI
 	service     *kanban.KanbanService
@@ -151,38 +156,15 @@ func (api *KanbanAPI) SetAPI(r *chi.Mux) {
 			respondWithError(w, err.Error())
 			return
 		}
-		err = api.service.Cards.AddComment(userCtx, nil, id, comment)
+		commentID, err := api.service.Cards.AddComment(userCtx, nil, id, comment)
 
-		if respond(w, &ResponseID{userCtx.ID}, err) {
+		if respond(w, &ResponseID{commentID}, err) {
 			pubCtx := publisher.PublisherContext{
 				UserID:     userCtx.ID,
 				DeviceID:   userCtx.DeviceID,
 				FromWidget: publisher.WidgetKanban,
 			}
 
-			api.pubAll.PublishUpdateItem(pubCtx, id)
-		}
-	})
-
-	r.Delete(api.route("/cards/{id}/comments/{commentId}"), func(w http.ResponseWriter, r *http.Request) {
-
-		userCtx, err := parseUserContext(r)
-		if err != nil {
-			respondWithError(w, err.Error())
-			return
-		}
-
-		id := parseNumberParam(r, "id")
-		commentId := parseNumberParam(r, "commentId")
-
-		err = api.service.Cards.DeleteComment(userCtx, nil, commentId)
-
-		if respond(w, &ResponseID{userCtx.ID}, err) {
-			pubCtx := publisher.PublisherContext{
-				UserID:     userCtx.ID,
-				DeviceID:   userCtx.DeviceID,
-				FromWidget: publisher.WidgetKanban,
-			}
 			api.pubAll.PublishUpdateItem(pubCtx, id)
 		}
 	})
@@ -196,7 +178,7 @@ func (api *KanbanAPI) SetAPI(r *chi.Mux) {
 		}
 
 		id := parseNumberParam(r, "id")
-		commentId := parseNumberParam(r, "commentId")
+		commentID := parseNumberParam(r, "commentId")
 
 		comment := kanbanStore.CommentInput{}
 		err = parseForm(w, r, &comment)
@@ -204,7 +186,30 @@ func (api *KanbanAPI) SetAPI(r *chi.Mux) {
 			respondWithError(w, err.Error())
 			return
 		}
-		err = api.service.Cards.UpdateComment(userCtx, nil, commentId, comment)
+		err = api.service.Cards.UpdateComment(userCtx, nil, commentID, comment)
+
+		if respond(w, &ResponseID{commentID}, err) {
+			pubCtx := publisher.PublisherContext{
+				UserID:     userCtx.ID,
+				DeviceID:   userCtx.DeviceID,
+				FromWidget: publisher.WidgetKanban,
+			}
+			api.pubAll.PublishUpdateItem(pubCtx, id)
+		}
+	})
+
+	r.Delete(api.route("/cards/{id}/comments/{commentId}"), func(w http.ResponseWriter, r *http.Request) {
+
+		userCtx, err := parseUserContext(r)
+		if err != nil {
+			respondWithError(w, err.Error())
+			return
+		}
+
+		id := parseNumberParam(r, "id")
+		commentID := parseNumberParam(r, "commentId")
+
+		err = api.service.Cards.DeleteComment(userCtx, nil, commentID)
 
 		if respond(w, &ResponseID{userCtx.ID}, err) {
 			pubCtx := publisher.PublisherContext{
@@ -566,6 +571,64 @@ func (api *KanbanAPI) SetAPI(r *chi.Mux) {
 			}
 			api.pubAll.PublishDeleteItem(pubCtx, 0, children)
 			api.pubKanban.DeleteColumn(pubCtx, id, children)
+		}
+	})
+
+	r.Get(api.route("/links"), func(w http.ResponseWriter, r *http.Request) {
+		userCtx, err := parseUserContext(r)
+		if err != nil {
+			respondWithError(w, err.Error())
+			return
+		}
+
+		links, err := api.service.Links.GetAll(userCtx, nil)
+
+		respond(w, &links, err)
+	})
+
+	r.Post(api.route("/links"), func(w http.ResponseWriter, r *http.Request) {
+		userCtx, err := parseUserContext(r)
+		if err != nil {
+			respondWithError(w, err.Error())
+			return
+		}
+
+		link := ReqLink{}
+		err = parseForm(w, r, &link)
+		if err != nil {
+			respondWithError(w, err.Error())
+			return
+		}
+
+		id, err := api.service.Links.Add(userCtx, nil, link.Link)
+
+		if respond(w, ResponseID{id}, err) {
+			pubCtx := publisher.PublisherContext{
+				UserID:     userCtx.ID,
+				DeviceID:   userCtx.DeviceID,
+				FromWidget: publisher.WidgetKanban,
+			}
+			api.pubKanban.AddLink(pubCtx, id)
+		}
+	})
+
+	r.Delete(api.route("/links/{id}"), func(w http.ResponseWriter, r *http.Request) {
+		userCtx, err := parseUserContext(r)
+		if err != nil {
+			respondWithError(w, err.Error())
+			return
+		}
+
+		id := parseNumberParam(r, "id")
+		err = api.service.Links.Delete(userCtx, nil, id)
+
+		if respond(w, &ResponseID{id}, err) {
+			pubCtx := publisher.PublisherContext{
+				UserID:     userCtx.ID,
+				DeviceID:   userCtx.DeviceID,
+				FromWidget: publisher.WidgetKanban,
+			}
+			api.pubKanban.DeleteLink(pubCtx, id)
 		}
 	})
 

@@ -18,7 +18,7 @@ type Task struct {
 	CompletionDate *time.Time        `json:"completion_date,omitempty"`
 	CreationDate   *time.Time        `json:"creation_date,omitempty"`
 	EditedDate     *time.Time        `json:"edited_date,omitempty"`
-	Priority       common.FuzzyInt   `json:"priority,omitempty"`
+	Priority       common.FuzzyInt   `json:"priority"`
 
 	Index int `json:"-"`
 }
@@ -31,15 +31,14 @@ type TempTask struct {
 
 type Meta struct {
 	ProjectID common.TID `json:"project"`
-	ParentID  common.TID `json:"parent"`
+	ParentID  common.TID `json:"parent,omitempty"`
 	TargetID  common.TID `json:"targetId"`
 	Reverse   bool       `json:"reverse"`
 }
 
 type AddTask struct {
-	Task
-	TargetID common.TID `json:"targetId"`
-	Reverse  bool       `json:"reverse"`
+	Meta
+	Task Task `json:"task"`
 }
 
 type UpdateTask struct {

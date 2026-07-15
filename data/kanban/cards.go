@@ -67,7 +67,7 @@ type CommentInput struct {
 	Text string `json:"text"`
 }
 
-func (s *cards) AddComment(ctx *data.DBContext, userId int, id int, comment CommentInput) error {
+func (s *cards) AddComment(ctx *data.DBContext, userId int, id int, comment CommentInput) (int, error) {
 	newComment := data.Comment{
 		Text:   comment.Text,
 		UserID: userId,
@@ -76,7 +76,7 @@ func (s *cards) AddComment(ctx *data.DBContext, userId int, id int, comment Comm
 	}
 
 	err := ctx.DB.Create(&newComment).Error
-	return err
+	return newComment.ID, err
 }
 
 func (s *cards) DeleteComment(ctx *data.DBContext, id int) error {
@@ -90,8 +90,8 @@ func (s *cards) UpdateComment(ctx *data.DBContext, id int, comment CommentInput)
 	return err
 }
 
-func (s *cards) Attachments(ctx *data.DBContext, id int, upd *[]data.File) error {
-	if upd == nil || len(*upd) == 0 {
+func (s *cards) Attachments(ctx *data.DBContext, id int, upd []data.File) error {
+	if len(upd) == 0 {
 		return ctx.DB.
 			Model(data.File{}).
 			Where("item_id = ?", id).
@@ -99,9 +99,9 @@ func (s *cards) Attachments(ctx *data.DBContext, id int, upd *[]data.File) error
 			Error
 	}
 
-	idx := make([]int, len(*upd))
+	idx := make([]int, len(upd))
 	coverID := 0
-	for i, u := range *upd {
+	for i, u := range upd {
 		idx[i] = u.ID
 		if u.IsCover {
 			coverID = u.ID

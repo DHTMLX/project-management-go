@@ -106,7 +106,7 @@ func initApp(r *chi.Mux) {
 	kanbanFileManager := kanbanStore.NewFileManager(Config.Binarydata, Config.Server.URL)
 	kanbanStoreObj := kanbanStore.InitKanbanStore(itemsTreeStore, projectsStore)
 	kanbanServiceObj := kanbanService.NewKanbanService(kanbanStoreObj, treeService)
-	kanbanPublisherApiObj := publisher.NewKanbanPublisher(kanbanStoreObj, r, path.Join(kanbanPrefix, "v1"), []string{"cards", "rows", "columns"})
+	kanbanPublisherApiObj := publisher.NewKanbanPublisher(kanbanStoreObj, r, path.Join(kanbanPrefix, "v1"), []string{"cards", "rows", "columns", "links"})
 	kanbanApiObj := api.NewKanbanAPI(kanbanServiceObj, kanbanPublisherApiObj, publisherApi, kanbanPrefix, kanbanFileManager)
 
 	// init gantt API
@@ -128,6 +128,7 @@ func initApp(r *chi.Mux) {
 	)
 	itemsDeleteProcessor.PushHandler(
 		ganttStoreObj.HandleTaskDeleteOperation,
+		kanbanStoreObj.HandleTaskDeleteOperation,
 	)
 	projectsProcessor.PushHandler(
 		projectsStore.HandleProjectAddOperation,

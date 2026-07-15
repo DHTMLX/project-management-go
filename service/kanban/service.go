@@ -17,6 +17,7 @@ type KanbanService struct {
 	Cards *cards
 	Rows  *rows
 	Cols  *cols
+	Links *links
 	Users *users
 }
 
@@ -25,6 +26,7 @@ func NewKanbanService(store *kanban.KanbanStore, tree *service.TreeService) *Kan
 		Cards: &cards{tree, store},
 		Rows:  &rows{store},
 		Cols:  &cols{store},
+		Links: &links{store},
 		Users: &users{store},
 	}
 }

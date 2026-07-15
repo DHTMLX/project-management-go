@@ -11,6 +11,7 @@ type KanbanStore struct {
 	Cards   *cards
 	Rows    *rows
 	Columns *columns
+	Links   *links
 	Users   *users
 }
 
@@ -23,6 +24,12 @@ func InitKanbanStore(itemsTreeStore *data.TreeStore, projectsStore *data.Project
 		panic(err)
 	}
 
+	// Add a custom model to the db. This model only relates to Kanban
+	err = db.AutoMigrate(&KanbanLink{})
+	if err != nil {
+		panic(err)
+	}
+
 	return &KanbanStore{
 		Cards: &cards{
 			TreeStore: itemsTreeStore,
@@ -31,6 +38,7 @@ func InitKanbanStore(itemsTreeStore *data.TreeStore, projectsStore *data.Project
 			ProjectsStore: projectsStore,
 		},
 		Columns: &columns{},
+		Links:   &links{},
 		Users:   &users{},
 	}
 }
@@ -72,4 +80,12 @@ func (s *KanbanStore) HandleProjectAddOperation(ctx *data.DBContext, obj *data.P
 	}
 
 	return nil
+}
+
+func (s *KanbanStore) HandleTaskDeleteOperation(ctx *data.DBContext, obj *data.Item) error {
+	// the Handler is called before the item is deleted, some relations can be cleared here
+
+	err := ctx.DB.Where("source = ? OR target = ?", obj.ID, obj.ID).Delete(&KanbanLink{}).Error
+
+	return err
 }

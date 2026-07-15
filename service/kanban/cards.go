@@ -70,12 +70,10 @@ func (s *cards) Update(userCtx uCtx.UserContext, dbCtx *data.DBContext, id int, 
 	}
 	upd.Index = card.Index
 
-	// if upd.StartDate == nil {
-	// 	upd.StartDate = card.StartDate
-	// }
-	// if upd.EndDate == nil {
-	// 	upd.EndDate = card.EndDate
-	// }
+	err = s.store.Cards.DeleteAssociations(dbCtx, id)
+	if err != nil {
+		return err
+	}
 
 	err = s.store.Cards.Update(dbCtx, id, &upd)
 	if err != nil {
@@ -227,15 +225,12 @@ func (s *cards) Vote(userCtx uCtx.UserContext, dbCtx *data.DBContext, id int, vo
 	return err
 }
 
-func (s *cards) AddComment(userCtx uCtx.UserContext, dbCtx *data.DBContext, id int, comment kanban.CommentInput) (err error) {
+func (s *cards) AddComment(userCtx uCtx.UserContext, dbCtx *data.DBContext, id int, comment kanban.CommentInput) (commentID int, err error) {
 	dbCtx = data.NewTCtx(dbCtx)
 	defer func() { err = dbCtx.End(err) }()
-	err = s.store.Cards.AddComment(dbCtx, userCtx.ID, id, comment)
-	if err != nil {
-		return err
-	}
 
-	return nil
+	commentID, err = s.store.Cards.AddComment(dbCtx, userCtx.ID, id, comment)
+	return
 }
 
 func (s *cards) DeleteComment(userCtx uCtx.UserContext, dbCtx *data.DBContext, id int) (err error) {
@@ -253,6 +248,7 @@ func (s *cards) DeleteComment(userCtx uCtx.UserContext, dbCtx *data.DBContext, i
 func (s *cards) UpdateComment(userCtx uCtx.UserContext, dbCtx *data.DBContext, id int, comment kanban.CommentInput) (err error) {
 	dbCtx = data.NewTCtx(dbCtx)
 	defer func() { err = dbCtx.End(err) }()
+
 	err = s.store.Cards.UpdateComment(dbCtx, id, comment)
 	if err != nil {
 		return err

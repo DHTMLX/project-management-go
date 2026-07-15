@@ -29,7 +29,7 @@ func (t *Task) PutItem(item data.Item) {
 
 	if item.EndDate != nil && item.StartDate != nil {
 		duration := item.EndDate.Sub(*item.StartDate) / time.Hour / 24
-		t.Duration = int(duration + 1)
+		t.Duration = int(duration)
 	} else {
 		item.StartDate = nil
 		t.StartDate = nil
