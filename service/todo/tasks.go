@@ -91,11 +91,12 @@ func (s *tasks) Update(userCtx uCtx.UserContext, dbCtx *data.DBContext, id int, 
 		t = task
 	}
 
-	if op.DueDate == nil {
-		t.DueDate = task.DueDate
-	}
-
 	t.Index = task.Index
+
+	err = s.store.Tasks.DeleteAssociations(dbCtx, id)
+	if err != nil {
+		return err
+	}
 
 	err = s.store.Tasks.Update(dbCtx, id, &t)
 

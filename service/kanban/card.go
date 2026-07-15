@@ -17,11 +17,11 @@ type Card struct {
 	StartDate   *time.Time      `json:"start_date"`
 	EndDate     *time.Time      `json:"end_date"`
 	Progress    common.FuzzyInt `json:"progress"`
-	Priority    common.FuzzyInt `json:"priority,omitempty"`
-	Users       []int           `json:"users,omitempty"`
-	Attached    *[]data.File    `json:"attached,omitempty"`
-	Comments    *[]data.Comment `json:"comments,omitempty"`
-	Votes       []int           `json:"votes,omitempty"`
+	Priority    common.FuzzyInt `json:"priority"`
+	Users       []int           `json:"users"`
+	Attached    []data.File     `json:"attached"`
+	Comments    []data.Comment  `json:"comments"`
+	Votes       []int           `json:"votes"`
 
 	Index int `json:"-"`
 }

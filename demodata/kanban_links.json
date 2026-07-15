@@ -1,0 +1,32 @@
+[
+  {
+    "source": 11,
+    "target": 2,
+    "relation": "requiredFor"
+  },
+  {
+    "source": 14,
+    "target": 10,
+    "relation": "parent"
+  },
+  {
+    "source": 14,
+    "target": 28,
+    "relation": "relatesTo"
+  },
+  {
+    "source": 19,
+    "target": 18,
+    "relation": "parent"
+  },
+  {
+    "source": 25,
+    "target": 26,
+    "relation": "relatesTo"
+  },
+  {
+    "source": 27,
+    "target": 29,
+    "relation": "requiredFor"
+  }
+]

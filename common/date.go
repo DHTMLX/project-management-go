@@ -20,7 +20,12 @@ func (d *JDate) UnmarshalJSON(b []byte) (err error) {
 	}
 	t, err := time.Parse(layout, s)
 	if err != nil {
-		return err
+		// dhtmlxGantt 10+ DataProcessor sends dates in ISO format
+		t, err = time.Parse(time.RFC3339, s)
+		if err != nil {
+			return err
+		}
+		t = t.UTC()
 	}
 	*d = JDate(t)
 

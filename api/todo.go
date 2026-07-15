@@ -126,6 +126,40 @@ func (api *TodoAPI) SetAPI(r *chi.Mux) {
 		}
 	})
 
+	r.Delete(api.route("/tasks"), func(w http.ResponseWriter, r *http.Request) {
+		userCtx, err := parseUserContext(r)
+		if err != nil {
+			respondWithError(w, err.Error())
+			return
+		}
+
+		batch := struct {
+			Batch []int `json:"batch"`
+		}{}
+		err = parseForm(w, r, &batch)
+		if err != nil {
+			respondWithError(w, err.Error())
+			return
+		}
+
+		for _, id := range batch.Batch {
+			children, err := api.service.Tasks.Delete(userCtx, nil, id)
+			if err != nil {
+				respondWithError(w, err.Error())
+				return
+			}
+
+			pubCtx := publisher.PublisherContext{
+				UserID:     userCtx.ID,
+				DeviceID:   userCtx.DeviceID,
+				FromWidget: publisher.WidgetTodo,
+			}
+			api.pubAll.PublishDeleteItem(pubCtx, id, children)
+		}
+
+		respond(w, &ResponseID{}, nil)
+	})
+
 	r.Post(api.route("/clone"), func(w http.ResponseWriter, r *http.Request) {
 		userCtx, err := parseUserContext(r)
 		if err != nil {

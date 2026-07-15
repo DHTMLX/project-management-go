@@ -65,9 +65,13 @@ func (p *TodoPublisher) AddItem(ctx PublisherContext, id int) (err error) {
 			},
 			ID: id,
 			Data: todoService.AddTask{
-				Task:     task,
-				TargetID: prevTask.ID,
-				Reverse:  task.Index == 0 && task.ParentID == 0,
+				Task: task,
+				Meta: todoService.Meta{
+					TargetID:  prevTask.ID,
+					ParentID:  task.ParentID,
+					ProjectID: task.ProjectID,
+					Reverse:   task.Index == 0 && task.ParentID == 0,
+				},
 			},
 		},
 	)

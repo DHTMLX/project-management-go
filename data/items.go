@@ -120,7 +120,12 @@ func (s *ItemsStore) DeleteAssociations(ctx *DBContext, ids ...int) error {
 
 func (s *ItemsStore) getById(ctx *DBContext, id int) (Item, error) {
 	obj := Item{}
-	err := ctx.DB.Preload("AssignedUsers").Preload("Votes").Take(&obj, id).Error
+	err := ctx.DB.
+		Preload("AssignedUsers").
+		Preload("Attached").
+		Preload("Comments").
+		Preload("Votes").
+		Take(&obj, id).Error
 	return obj, err
 }
 

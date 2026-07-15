@@ -13,7 +13,6 @@ type KanbanMove struct {
 	ID       int `json:"id"`
 	RowID    int `json:"row"`
 	ColumnID int `json:"column"`
-	Before   int `json:"before"`
 }
 
 type KanbanEvent struct {
@@ -21,13 +20,14 @@ type KanbanEvent struct {
 	Card   *kanbanService.Card       `json:"card,omitempty"`
 	Row    *kanbanService.Row        `json:"row,omitempty"`
 	Column *kanbanStore.KanbanColumn `json:"column,omitempty"`
-	Move   *KanbanMove               `json:"move"`
+	Link   *kanbanStore.KanbanLink   `json:"link,omitempty"`
 	Before int                       `json:"before"`
 }
 
 type KanbanMoveEvent struct {
 	EventBase
-	Move *KanbanMove `json:"card"`
+	Move   *KanbanMove `json:"card"`
+	Before int         `json:"before,omitempty"`
 }
 
 type KanbanPublisher struct {
@@ -311,8 +311,8 @@ func (p *KanbanPublisher) MoveCard(ctx PublisherContext, id, before, row, column
 			ID:       id,
 			ColumnID: column,
 			RowID:    row,
-			Before:   before,
 		},
+		Before: before,
 	})
 
 	return nil
@@ -346,6 +346,69 @@ func (p *KanbanPublisher) MoveColumn(ctx PublisherContext, id, before int) error
 		},
 		Before: before,
 	})
+
+	return nil
+}
+
+func (p *KanbanPublisher) AddLink(ctx PublisherContext, id int) error {
+	dbCtx := data.NewCtx(nil)
+
+	link, err := p.store.Links.GetOne(dbCtx, id)
+	if err != nil {
+		return err
+	}
+
+	p.api.Events.Publish(
+		"links",
+		&KanbanEvent{
+			EventBase: EventBase{
+				From:   ctx.DeviceID,
+				Type:   "add-link",
+				Widget: ctx.FromWidget,
+			},
+			Link: &link,
+		},
+	)
+
+	return nil
+}
+func (p *KanbanPublisher) UpdateLink(ctx PublisherContext, id int) error {
+	dbCtx := data.NewCtx(nil)
+
+	link, err := p.store.Links.GetOne(dbCtx, id)
+	if err != nil {
+		return err
+	}
+
+	p.api.Events.Publish(
+		"links",
+		&KanbanEvent{
+			EventBase: EventBase{
+				From:   ctx.DeviceID,
+				Type:   "update-link",
+				Widget: ctx.FromWidget,
+			},
+			Link: &link,
+		},
+	)
+
+	return nil
+}
+
+func (p *KanbanPublisher) DeleteLink(ctx PublisherContext, id int) error {
+	p.api.Events.Publish(
+		"links",
+		&KanbanEvent{
+			EventBase: EventBase{
+				From:   ctx.DeviceID,
+				Type:   "delete-link",
+				Widget: ctx.FromWidget,
+			},
+			Link: &kanbanStore.KanbanLink{
+				ID: id,
+			},
+		},
+	)
 
 	return nil
 }
